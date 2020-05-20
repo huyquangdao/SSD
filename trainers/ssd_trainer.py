@@ -154,8 +154,8 @@ class SSDTrainer(BaseTrainer):
                 dev_total_loss_average = dev_epoch_total_loss.average()
                 dev_xy_loss_average = dev_epoch_xy_loss.average()
                 dev_wh_loss_average = dev_epoch_wh_loss.average()
-                dev_conf_loss_average = dev_epoch_class_loss.average()
-                dev_class_no_loss_average = dev_epoch_no_class_loss.average()
+                dev_class_loss_average = dev_epoch_class_loss.average()
+                dev_no_class_loss_average = dev_epoch_no_class_loss.average()
 
                 stop = early_stopping.step(val=dev_total_loss_average)
 
@@ -185,5 +185,5 @@ class SSDTrainer(BaseTrainer):
                         i+1, best_loss)
                     self.save_model(model_path)
 
-                print('epoch - {0}, global_step:{1}, train_total_loss:{2:.2f}, train_xy_loss:{3:.2f}, train_wh_loss:{4:.2f}, train_conf_loss:{5:.2f}, train_class_loss:'.format(
-                    i+1, global_step, train_total_loss_average, train_total_xy_average, train_total_wh_average, train_total_conf_average, train_total_class_average))
+                print('epoch - {0}, global_step:{1}, train_total_loss:{2:.2f}, train_xy_loss:{3:.2f}, train_wh_loss:{4:.2f}, train_class_loss:{5:.2f}, train_no_class_loss:'.format(
+                    i+1, global_step, train_total_loss_average, train_total_xy_average, train_total_wh_average, train_total_class_average, train_total_no_class_average))
