@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument('--num_workers', help='number of process', default=2, type = int)
     parser.add_argument('--seed',help='random seed',default=1234, type= int)
     parser.add_argument('--epoch', help='training epochs', default=10, type = int)
-    parser.add_argument('--lr',help='learning rate',default=0.001)
+    parser.add_argument('--lr',help='learning rate',default=1e-4)
     parser.add_argument('--max_lr', help = 'maximum learning rate', default=0.01, type= float)
     parser.add_argument('--val_batch_size', help='Your validation batch size', default=8)
     parser.add_argument('--grad_clip',help='gradient clipping theshold',default=5, type = int)
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         DEVICE = torch.device('cpu')
 
 
-    lr_scheduler = optim.lr_scheduler.CyclicLR(optimizer = optimizer,base_lr=args.lr, cycle_momentum = False, max_lr=args.max_lr,step_size_up=100)
+    lr_scheduler = optim.lr_scheduler.CyclicLR(optimizer = optimizer,base_lr=args.lr, cycle_momentum = False, max_lr=args.max_lr,step_size_up=20)
 
     trainer = SSDTrainer(model= model,
                         optimizer= optimizer,
