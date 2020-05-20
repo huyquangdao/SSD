@@ -1,6 +1,8 @@
 # from utils.data_utils import get_voc_names
 import numpy as np
 # from base.parser import BaseParser
+from base.parser import BaseParser
+from utils.data_utils import get_dataset_names
 
 
 class FaceParser(BaseParser):

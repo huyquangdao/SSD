@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 # from base.dataset import BaseDataset
 import os
 import cv2
-from parser.face_parser import FaceParser
+from parser_data.face_parser import FaceParser
 from base.dataset import BaseDataset
 import numpy as np
 from utils.data_utils import calculate_all_default_boxes, build_ground_truth, resize_with_bboxes
