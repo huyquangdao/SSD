@@ -82,7 +82,7 @@ if __name__ == "__main__":
                         criterion= criterion,
                         metric=metric,
                         log = writer,
-                        lr_scheduler = lr_scheduler,
+                        lr_scheduler = None,
                         device = DEVICE,
                         )
 
