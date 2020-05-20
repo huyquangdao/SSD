@@ -65,8 +65,8 @@ class SSDTrainer(BaseTrainer):
             train_epoch_total_loss = Loss()
             train_epoch_xy_loss = Loss()
             train_epoch_wh_loss = Loss()
-            train_epoch_conf_loss = Loss()
             train_epoch_class_loss = Loss()
+            train_epoch_no_class_loss = Loss()
 
             self.metric.clear_memory()
 
@@ -76,15 +76,15 @@ class SSDTrainer(BaseTrainer):
                 step_loss, y_true, y_pred = self.iter(batch)
 
                 # self.metric.write(y_true,y_pred)
-                total_loss, xy_loss, wh_loss, conf_loss, class_loss = step_loss
+                total_loss, xy_loss, wh_loss, class_loss, no_class_loss = step_loss
                 total_loss = total_loss / gradient_accumalation_step
                 total_loss.backward()
 
                 train_epoch_total_loss.write(total_loss.item())
                 train_epoch_xy_loss.write(xy_loss.item())
                 train_epoch_wh_loss.write(wh_loss.item())
-                train_epoch_conf_loss.write(conf_loss.item())
                 train_epoch_class_loss.write(class_loss.item())
+                train_epoch_no_class_loss.write(no_class_loss.item())
 
                 self.log.write('total_loss/training_total_loss',
                                total_loss.item(), global_step)
@@ -92,25 +92,25 @@ class SSDTrainer(BaseTrainer):
                                xy_loss.item(), global_step)
                 self.log.write('wh_loss/training_wh_loss',
                                wh_loss.item(), global_step)
-                self.log.write('conf_loss/training_conf_loss',
-                               conf_loss.item(), global_step)
                 self.log.write('class_loss/training_class_loss',
                                class_loss.item(), global_step)
+                self.log.write('no_class_loss/training_no_class_loss',
+                               no_class_loss.item(), global_step)
 
                 if global_step % gradient_accumalation_step == 0:
                     torch.nn.utils.clip_grad_norm(
                         self.model.parameters(), gradient_clipping)
                     self.optimizer.step()
                     self.model.zero_grad()
-                    
+
                 if self.lr_scheduler is not None:
                     self.lr_scheduler.step()
 
             train_total_loss_average = train_epoch_total_loss.average()
             train_total_xy_average = train_epoch_xy_loss.average()
             train_total_wh_average = train_epoch_wh_loss.average()
-            train_total_conf_average = train_epoch_conf_loss.average()
             train_total_class_average = train_epoch_class_loss.average()
+            train_total_no_class_average = train_epoch_no_class_loss.average()
 
             if dev_loader is not None:
 
@@ -119,8 +119,8 @@ class SSDTrainer(BaseTrainer):
                 dev_epoch_total_loss = Loss()
                 dev_epoch_xy_loss = Loss()
                 dev_epoch_wh_loss = Loss()
-                dev_epoch_conf_loss = Loss()
                 dev_epoch_class_loss = Loss()
+                dev_epoch_no_class_loss = Loss()
 
                 self.metric.clear_memory()
 
@@ -131,15 +131,14 @@ class SSDTrainer(BaseTrainer):
                         val_global_step += 1
 
                         step_loss, y_true, y_pred = self.iter(batch)
-                        total_loss, xy_loss, wh_loss, conf_loss, class_loss = step_loss
-
+                        total_loss, xy_loss, wh_loss, class_loss, no_class_loss = step_loss
                         # self.metric.write(y_true,y_pred)
 
                         dev_epoch_total_loss.write(total_loss.item())
                         dev_epoch_xy_loss.write(xy_loss.item())
                         dev_epoch_wh_loss.write(wh_loss.item())
-                        dev_epoch_conf_loss.write(conf_loss.item())
                         dev_epoch_class_loss.write(class_loss.item())
+                        dev_epoch_no_class_loss.write(no_class_loss.item())
 
                         self.log.write('total_loss/dev_total_loss',
                                        total_loss.item(), val_global_step)
@@ -148,15 +147,15 @@ class SSDTrainer(BaseTrainer):
                         self.log.write('wh_loss/dev_wh_loss',
                                        wh_loss.item(), val_global_step)
                         self.log.write('conf_loss/dev_conf_loss',
-                                       conf_loss.item(), val_global_step)
-                        self.log.write('class_loss/dev_class_loss',
                                        class_loss.item(), val_global_step)
+                        self.log.write('class_loss/dev_class_loss',
+                                       no_class_loss.item(), val_global_step)
 
                 dev_total_loss_average = dev_epoch_total_loss.average()
                 dev_xy_loss_average = dev_epoch_xy_loss.average()
                 dev_wh_loss_average = dev_epoch_wh_loss.average()
-                dev_conf_loss_average = dev_epoch_conf_loss.average()
-                dev_class_loss_average = dev_epoch_class_loss.average()
+                dev_conf_loss_average = dev_epoch_class_loss.average()
+                dev_class_no_loss_average = dev_epoch_no_class_loss.average()
 
                 stop = early_stopping.step(val=dev_total_loss_average)
 
@@ -173,8 +172,8 @@ class SSDTrainer(BaseTrainer):
                 # for tag, item in dev_result.items():
                 #     self.log.write(tag,item,i+1)
 
-                print('epoch - {0}, global_step:{1}, train_total_loss:{2:.2f}, train_xy_loss:{3:.2f}, train_wh_loss:{4:.2f}, train_conf_loss:{5:.2f}, train_class_loss: {6:.2f}, dev_total_loss:{7:.2f}, dev_xy_loss:{8:.2f}, dev_wh_loss:{9:.2f}, dev_conf_loss:{10:.2f},dev_class_loss:{11:.2f} '.format(
-                    i+1, global_step, train_total_loss_average, train_total_xy_average, train_total_wh_average, train_total_conf_average, train_total_class_average, dev_total_loss_average, dev_xy_loss_average, dev_wh_loss_average, dev_conf_loss_average, dev_class_loss_average))
+                print('epoch - {0}, global_step:{1}, train_total_loss:{2:.2f}, train_xy_loss:{3:.2f}, train_wh_loss:{4:.2f}, train_class_loss:{5:.2f}, train_no_class_loss: {6:.2f}, dev_total_loss:{7:.2f}, dev_xy_loss:{8:.2f}, dev_wh_loss:{9:.2f}, dev_class_loss:{10:.2f},dev_no_class_loss:{11:.2f} '.format(
+                    i+1, global_step, train_total_loss_average, train_total_xy_average, train_total_wh_average, train_total_class_average, train_total_no_class_average, dev_total_loss_average, dev_xy_loss_average, dev_wh_loss_average, dev_class_loss_average, dev_no_class_loss_average))
 
                 # print(train_result, dev_result)
 
