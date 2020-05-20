@@ -19,14 +19,14 @@ class SSDTrainer(BaseTrainer):
 
     def iter(self, batch):
         batch = [t.to(self.device) for t in batch]
-        image, y_true38, y_true19, y_true10, y_true5, y_true3, y_true1 = batch
+        image, y_true = batch
         image = image.permute(0,3,1,2)
         output = self.model(image)
     
         #output_prediction = [feature_map13, feature_map26, feature_map52]
         #output_anchors = [anchors13, anchors26, anchors52]
-        total_loss, xy_loss, wh_loss, conf_loss, prob_loss = self.criterion([y_true38, y_true19, y_true10, y_true5, y_true3, y_true1], output)
-        return [total_loss, xy_loss, wh_loss, conf_loss, prob_loss], [y_true38, y_true19, y_true10, y_true5, y_true3, y_true1], output
+        total_loss, xy_loss, wh_loss, conf_loss, prob_loss = self.criterion(y_true, output)
+        return [total_loss, xy_loss, wh_loss, conf_loss, prob_loss], y_true, output
 
     def train(self,
               train_dataset,
