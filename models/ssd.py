@@ -139,7 +139,7 @@ class SSDLossLayer(nn.Module):
         # for y in list_y_true:
         #     print(y.shape)
 
-        default_boxes = torch.cat(self.list_default_boxes, dim = 0).to(self.device)
+        default_boxes = torch.cat(self.list_default_boxes, dim = 0).type(float_tensor)
 
         default_boxes = default_boxes.unsqueeze(0)
 
