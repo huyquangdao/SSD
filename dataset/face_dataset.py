@@ -89,4 +89,4 @@ class FaceDataset(BaseDataset):
         # print(torch.sum(y_true3))
         # print(torch.sum(y_true1))
 
-        return image, y_true38, y_true19, y_true10, y_true5, y_true3, y_true1
+        return image, y_true
