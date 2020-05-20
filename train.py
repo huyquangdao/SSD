@@ -3,7 +3,7 @@ import torch.optim as optim
 import argparse
 import torch
 
-from trainers.ssd_trainer import SSD
+from trainers.ssd_trainer import SSDTrainer
 from models.ssd import SSD, SSDLossLayer
 
 from metrics.classification_metric import ClassificationMetric
