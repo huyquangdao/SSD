@@ -26,6 +26,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_dir', help='Your training directory', default='data/train')
     parser.add_argument('--test_dir', help='Your testing directory', default='data/test')
+    parser.add_argument('--name_dir', help ='Yout dataset name label', default ='data/names.txt')
+
     parser.add_argument('--image_size', help='Your training image size', default=300, type = int)
     parser.add_argument('--batch_size',help='Your training batch size',default=8, type = int)
     parser.add_argument('--num_workers', help='number of process', default=2, type = int)
