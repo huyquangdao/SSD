@@ -75,7 +75,7 @@ if __name__ == "__main__":
         DEVICE = torch.device('cpu')
 
 
-    lr_scheduler = optim.lr_scheduler.CyclicLR(optimizer = optimizer,base_lr=args.lr,max_lr=args.max_lr,step_size_up=100)
+    lr_scheduler = optim.lr_scheduler.CyclicLR(optimizer = optimizer,base_lr=args.lr, cycle_momentum = False, max_lr=args.max_lr,step_size_up=100)
 
     trainer = SSDTrainer(model= model,
                         optimizer= optimizer,
