@@ -73,11 +73,12 @@ class FaceDataset(BaseDataset):
 
         # print(list_default_boxes[-1])
 
-        y_true38, y_true19, y_true10, y_true5, y_true3, y_true1 = build_ground_truth(n_classes=self.n_classes,
-                                                          labels=labels,
-                                                          boxes=boxes,
-                                                          image_size=self.image_size,
-                                                          list_default_boxes = list_default_boxes)
+        y_true = build_ground_truth(n_classes=self.n_classes,
+                                    labels=labels,
+                                    boxes=boxes,
+                                    image_size=self.image_size,
+                                    list_default_boxes = self.list_default_boxes)
+        
         
         # print('in here:') 
 

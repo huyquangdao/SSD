@@ -20,14 +20,14 @@ def calculate_iou(box1, box2, x1y1x2y2=True):
 
     if not x1y1x2y2:
         # Transform from center and width to exact coordinates
-        b1_x1, b1_x2 = box1[:, 0] - box1[:, 2] / 2, box1[:, 0] + box1[:, 2] / 2
-        b1_y1, b1_y2 = box1[:, 1] - box1[:, 3] / 2, box1[:, 1] + box1[:, 3] / 2
-        b2_x1, b2_x2 = box2[:, 0] - box2[:, 2] / 2, box2[:, 0] + box2[:, 2] / 2
-        b2_y1, b2_y2 = box2[:, 1] - box2[:, 3] / 2, box2[:, 1] + box2[:, 3] / 2
+        b1_x1, b1_x2 = box1[..., 0] - box1[..., 2] / 2, box1[..., 0] + box1[..., 2] / 2
+        b1_y1, b1_y2 = box1[..., 1] - box1[..., 3] / 2, box1[..., 1] + box1[..., 3] / 2
+        b2_x1, b2_x2 = box2[..., 0] - box2[..., 2] / 2, box2[..., 0] + box2[..., 2] / 2
+        b2_y1, b2_y2 = box2[..., 1] - box2[..., 3] / 2, box2[..., 1] + box2[..., 3] / 2
     else:
         # Get the coordinates of bounding boxes
-        b1_x1, b1_y1, b1_x2, b1_y2 = box1[:, 0], box1[:, 1], box1[:, 2], box1[:, 3]
-        b2_x1, b2_y1, b2_x2, b2_y2 = box2[:, 0], box2[:, 1], box2[:, 2], box2[:, 3]
+        b1_x1, b1_y1, b1_x2, b1_y2 = box1[..., 0], box1[..., 1], box1[..., 2], box1[..., 3]
+        b2_x1, b2_y1, b2_x2, b2_y2 = box2[..., 0], box2[..., 1], box2[..., 2], box2[..., 3]
 
     # get the corrdinates of the intersection rectangle
     inter_rect_x1 = torch.max(b1_x1, b2_x1)
@@ -42,9 +42,8 @@ def calculate_iou(box1, box2, x1y1x2y2=True):
     b1_area = (b1_x2 - b1_x1 + 1) * (b1_y2 - b1_y1 + 1)
     b2_area = (b2_x2 - b2_x1 + 1) * (b2_y2 - b2_y1 + 1)
 
-    iou = inter_area / (b1_area + b2_area - inter_area + 1e-8)
 
-    
+    iou = inter_area / (b1_area + b2_area - inter_area + 1e-8)
 
     return iou
 
@@ -151,7 +150,7 @@ def calculate_default_boxes(s_k, n_boxes = 6, aspect_ratio = [1., 2., 3., 1/2, 1
     return np.array(boxes)
 
 
-def calculate_all_default_boxes(n_feature_maps = 6):
+def calculate_all_default_boxes(n_feature_maps = 6, image_size = 300):
 
     n_feature_maps = n_feature_maps
 
@@ -213,9 +212,15 @@ def calculate_all_default_boxes(n_feature_maps = 6):
 
         default_boxes = torch.cat([x_y_offset,default_boxes],dim=-1)
 
-        default_boxes = default_boxes / map_shape
+        # default_boxes = default_boxes / map_shape
+
+        #scale to (0,1)
 
         default_boxes = default_boxes.view(-1,4)
+
+        ratio = image_size / map_shape
+
+        default_boxes = default_boxes * ratio 
 
         # default_boxes = default_boxes 
         
@@ -235,99 +240,43 @@ def build_ground_truth(boxes, labels, image_size, n_classes, list_default_boxes,
     y_true_3 = torch.zeros(size=(3 * 3 * 4,4 + 1 + 1))
     y_true_1 = torch.zeros(size=(1 * 1 * 4, 4 + 1 + 1))
 
+    pair_map_shape = {0:37,1:19,2:10,3:5,4:3,5:1}
+
     y_true = [y_true_38, y_true_19, y_true_10, y_true_5, y_true_3, y_true_1]
 
-    for i,box in enumerate(boxes):
+    y_true = torch.cat(y_true,dim=0)
 
-        best_idx = None
-        best_iou = -1
-        best_mask = None
+    #[All_boxes, 6]
 
-        n_box = None
+    default_boxes = torch.cat( list_default_boxes, dim =0)
 
-        box = torch.FloatTensor(box).unsqueeze(0)
+    # print(y_true.shape)
+    # print(default_boxes.shape)
+    # print(boxes.shape)
 
-        temp1 = box.clone()
+    boxes = torch.FloatTensor(boxes)
 
-        box_centers = (box[:,0:2] + box[:,2:4]) /2
-        box_sizes = (box[:,2:4] - box[:,0:2])
+    box_centers = (boxes[:,0:2] + boxes[:,2:4]) /2
+    box_sizes = (boxes[:,2:4] - boxes[:,0:2])
 
-        box[:,0:2] = box_centers
-        box[:,2:4] = box_sizes
+    boxes[:,0:2] = box_centers
+    boxes[:,2:4] = box_sizes
 
-        box = box / image_size
+    boxes = boxes.unsqueeze(1)
+    default_boxes = default_boxes.unsqueeze(0)
 
-        for j, (y, default_boxes) in enumerate(list(zip(y_true, list_default_boxes))):
+    iou = calculate_iou(boxes, default_boxes, x1y1x2y2 = False)
 
-            map_shape = y.shape[0]
+    idx_max = torch.argmax(iou, dim=1)
 
-            # print(default_boxes.shape)
+    boxes = boxes
 
-            # print(temp)
+    for i, idx in enumerate(idx_max):
 
-            # print(default_boxes[0])
-
-            iou = calculate_iou(box, default_boxes)
-
-            # print('iou:', iou.shape)
-
-            #box = [1 , 4]
-
-            #default_anchors = [shape,shape,M,4]
-
-            #iou = [shape, shape, M, 1] 
-
-            iou_mask = (iou > iou_thresh)
-
-            # print('n matching box: ',torch.sum(iou_mask.type(torch.FloatTensor)))
-
-            #iou_mask = [shape, shape, M]
-
-            m_iou = torch.clamp(iou[iou_mask].mean(),min=0, max=1.)
-
-            # print(m_iou)
-
-            if m_iou > best_iou and True not in torch.isnan(m_iou):
-                best_iou = m_iou
-                best_idx = j
-                best_mask = iou_mask
-                # n_box = l
+        c = labels[i]
         
-        if best_idx is not None:
-
-            # print('iou_mask_shape:', best_mask.shape)
-            # print('box shape:',box.shape)
-
-            # print('y true ide',best_idx)
-
-            # #[shape,shape, M]
-
-            # print('y true shape:',y_true[best_idx][...,:,:4].shape)
-            
-            # print(''iou_mask.shape)
-
-            # print('best_iou_mean_per_boxes: ', best_iou)
-            # print('box coor:', temp1)
-
-            # print('y_true shape: ',y_true[best_idx].shape)
-
-
-            # print(y_true[best_idx][best_mask].shape)
-
-            # map_shape = map_shape[best_idx]
-
-            c = labels[i]
-
-            # print(torch.sum(temp))
-
-            y_true[best_idx][best_mask,:4] = box
-            y_true[best_idx][best_mask,4] = 1.
-            y_true[best_idx][best_mask,5] = c + 1
-
-            # print(y_true[best_idx])
-
-            # print('check here: ', torch.sum(y_true[best_idx]))
+        y_true[idx,:4] = boxes[i]
+        y_true[idx,4] = 1.
+        y_true[idx,5] = c + 1
 
     return y_true
-
-

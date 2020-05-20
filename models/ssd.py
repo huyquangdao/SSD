@@ -132,9 +132,9 @@ class SSDLossLayer(nn.Module):
         
     
 
-    def forward(self, list_y_true, list_y_pred):
+    def forward(self, y_true, list_y_pred):
 
-        y_true = torch.cat(list_y_true, dim=1)
+        # y_true = torch.cat(list_y_true, dim=1)
 
         # for y in list_y_true:
         #     print(y.shape)
@@ -195,8 +195,8 @@ class SSDLossLayer(nn.Module):
 
         # print(true_boxes_xy.shape)
 
-        xy_loss = positive_mask * torch.nn.functional.mse_loss(target = true_boxes_xy, input = pred_boxes_xy, reduction='none')
-        wh_loss = positive_mask * torch.nn.functional.mse_loss(target = true_boxes_wh, input = pred_boxes_wh, reduction='none')
+        xy_loss = positive_mask * torch.nn.functional.smooth_l1_loss(target = true_boxes_xy, input = pred_boxes_xy, reduction='none')
+        wh_loss = positive_mask * torch.nn.functional.smooth_l1_loss(target = true_boxes_wh, input = pred_boxes_wh, reduction='none')
 
         N = torch.sum(positive_mask) 
 
